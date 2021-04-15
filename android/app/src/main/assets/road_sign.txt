@@ -1,0 +1,5 @@
+RegulatorySpeedLimit
+WarningSpeedLimit
+StopSign
+Placeholder1
+Placeholder2
