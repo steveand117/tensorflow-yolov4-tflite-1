@@ -16,11 +16,9 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
 import android.os.Build;
-import android.os.Trace;
 import android.util.Log;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -29,23 +27,15 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Vector;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.examples.detection.MainActivity;
 import org.tensorflow.lite.examples.detection.env.Logger;
 import org.tensorflow.lite.examples.detection.env.Utils;
 
-import static org.tensorflow.lite.examples.detection.env.Utils.expit;
-import static org.tensorflow.lite.examples.detection.env.Utils.softmax;
-
-import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.gpu.GpuDelegate;
 import org.tensorflow.lite.nnapi.NnApiDelegate;
 
@@ -58,7 +48,7 @@ import org.tensorflow.lite.nnapi.NnApiDelegate;
  * - https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md
  * - https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/running_on_mobile_tensorflowlite.md#running-our-model-on-android
  */
-public class YoloV4Classifier implements Classifier {
+public class YoloV4Classifier implements Detector {
 
     /**
      * Initializes a native TensorFlow session for classifying images.
@@ -68,7 +58,7 @@ public class YoloV4Classifier implements Classifier {
      * @param labelFilename The filepath of label file for classes.
      * @param isQuantized   Boolean representing model is quantized or not
      */
-    public static Classifier create(
+    public static Detector create(
             final AssetManager assetManager,
             final String modelFilename,
             final String labelFilename,

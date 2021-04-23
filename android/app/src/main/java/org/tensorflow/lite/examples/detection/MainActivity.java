@@ -2,7 +2,6 @@ package org.tensorflow.lite.examples.detection;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -12,8 +11,6 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -22,7 +19,7 @@ import org.tensorflow.lite.examples.detection.customview.OverlayView;
 import org.tensorflow.lite.examples.detection.env.ImageUtils;
 import org.tensorflow.lite.examples.detection.env.Logger;
 import org.tensorflow.lite.examples.detection.env.Utils;
-import org.tensorflow.lite.examples.detection.tflite.Classifier;
+import org.tensorflow.lite.examples.detection.tflite.Detector;
 import org.tensorflow.lite.examples.detection.tflite.YoloV4Classifier;
 import org.tensorflow.lite.examples.detection.tracking.MultiBoxTracker;
 
@@ -49,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
             Handler handler = new Handler();
 
             new Thread(() -> {
-                final List<Classifier.Recognition> results = detector.recognizeImage(cropBitmap);
+                final List<Detector.Recognition> results = detector.recognizeImage(cropBitmap);
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -82,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
     private static final boolean MAINTAIN_ASPECT = false;
     private Integer sensorOrientation = 90;
 
-    private Classifier detector;
+    private Detector detector;
 
     private Matrix frameToCropTransform;
     private Matrix cropToFrameTransform;
@@ -135,17 +132,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void handleResult(Bitmap bitmap, List<Classifier.Recognition> results) {
+    private void handleResult(Bitmap bitmap, List<Detector.Recognition> results) {
         final Canvas canvas = new Canvas(bitmap);
         final Paint paint = new Paint();
         paint.setColor(Color.RED);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(2.0f);
 
-        final List<Classifier.Recognition> mappedRecognitions =
-                new LinkedList<Classifier.Recognition>();
+        final List<Detector.Recognition> mappedRecognitions =
+                new LinkedList<Detector.Recognition>();
 
-        for (final Classifier.Recognition result : results) {
+        for (final Detector.Recognition result : results) {
             final RectF location = result.getLocation();
             if (location != null && result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
                 canvas.drawRect(location, paint);

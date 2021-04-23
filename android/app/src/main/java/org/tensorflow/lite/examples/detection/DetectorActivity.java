@@ -36,14 +36,16 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.tensorflow.lite.examples.classification.tflite.Classifier;
 import org.tensorflow.lite.examples.detection.customview.OverlayView;
 import org.tensorflow.lite.examples.detection.customview.OverlayView.DrawCallback;
 import org.tensorflow.lite.examples.detection.env.BorderedText;
 import org.tensorflow.lite.examples.detection.env.ImageUtils;
 import org.tensorflow.lite.examples.detection.env.Logger;
-import org.tensorflow.lite.examples.detection.tflite.Classifier;
+import org.tensorflow.lite.examples.detection.tflite.Detector;
 import org.tensorflow.lite.examples.detection.tflite.YoloV4Classifier;
 import org.tensorflow.lite.examples.detection.tracking.MultiBoxTracker;
+
 
 /**
  * An activity that uses a TensorFlowMultiBoxDetector and ObjectTracker to detect and then track
@@ -67,8 +69,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     OverlayView trackingOverlay;
     private Integer sensorOrientation;
 
-    private Classifier detector;
-
+    private Detector detector;
     private long lastProcessingTimeMs;
     private Bitmap rgbFrameBitmap = null;
     private Bitmap croppedBitmap = null;
@@ -84,6 +85,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     private MultiBoxTracker tracker;
 
     private BorderedText borderedText;
+
+    // Classifier variables
+
+    private Classifier classifier;
+
+    private Bitmap imageCroppedBitmap = null;
 
     @Override
     public void onPreviewSizeChosen(final Size size, final int rotation) {
@@ -114,6 +121,20 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         } catch (final IOException e) {
             e.printStackTrace();
             LOGGER.e(e, "Exception initializing classifier!");
+            Toast toast =
+                    Toast.makeText(
+                            getApplicationContext(), "Classifier could not be initialized", Toast.LENGTH_SHORT);
+            toast.show();
+            finish();
+        }
+
+        try {
+            LOGGER.d(
+                    "Creating classifier (model=%s, device=%s, numThreads=%d)", Classifier.Model.FLOAT_MOBILENET, Classifier.Device.CPU, 1);
+            classifier = Classifier.create(this, Classifier.Model.FLOAT_MOBILENET, Classifier.Device.CPU, 1);
+        } catch (IOException | IllegalArgumentException e) {
+            e.printStackTrace();
+            LOGGER.e(e, "Exception initializing Classifier!");
             Toast toast =
                     Toast.makeText(
                             getApplicationContext(), "Classifier could not be initialized", Toast.LENGTH_SHORT);
@@ -186,7 +207,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                     public void run() {
                         LOGGER.i("Running detection on image " + currTimestamp);
                         final long startTime = SystemClock.uptimeMillis();
-                        final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
+                        final List<Detector.Recognition> results = detector.recognizeImage(croppedBitmap);
                         lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
                         Log.e("CHECK", "run: " + results.size());
@@ -205,13 +226,23 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                                 break;
                         }
 
-                        final List<Classifier.Recognition> mappedRecognitions =
-                                new LinkedList<Classifier.Recognition>();
+                        final List<Detector.Recognition> mappedRecognitions =
+                                new LinkedList<Detector.Recognition>();
 
-                        for (final Classifier.Recognition result : results) {
+                        for (final Detector.Recognition result : results) {
                             final RectF location = result.getLocation();
                             if (location != null && result.getConfidence() >= minimumConfidence) {
                                 canvas.drawRect(location, paint);
+
+                                int locationX = (int) location.left;
+                                int locationY = (int) location.top;
+                                int width = (int) location.width();
+                                int height = (int) location.height();
+
+                                imageCroppedBitmap = Bitmap.createBitmap(croppedBitmap, locationX, locationY, width, height);
+                                List<Classifier.Recognition> classifierResults = classifier.recognizeImage(imageCroppedBitmap, sensorOrientation);
+
+                                result.setTitle(classifierResults.get(0).getTitle());
 
                                 cropToFrameTransform.mapRect(location);
 
