@@ -50,6 +50,7 @@ import org.tensorflow.lite.nnapi.NnApiDelegate;
  */
 public class YoloV4Classifier implements Detector {
 
+    static Interpreter.Options options;
     /**
      * Initializes a native TensorFlow session for classifying images.
      *
@@ -77,7 +78,7 @@ public class YoloV4Classifier implements Detector {
         br.close();
 
         try {
-            Interpreter.Options options = (new Interpreter.Options());
+            options = (new Interpreter.Options());
             options.setNumThreads(NUM_THREADS);
             if (isNNAPI) {
                 NnApiDelegate nnApiDelegate = null;
@@ -135,7 +136,7 @@ public class YoloV4Classifier implements Detector {
 
     @Override
     public void setUseNNAPI(boolean isChecked) {
-        if (tfLite != null) tfLite.setUseNNAPI(isChecked);
+        if (tfLite != null) options.setUseNNAPI(isChecked);
     }
 
     @Override
