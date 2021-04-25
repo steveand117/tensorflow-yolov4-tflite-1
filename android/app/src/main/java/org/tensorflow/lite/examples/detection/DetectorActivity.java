@@ -32,6 +32,8 @@ import android.util.Size;
 import android.util.TypedValue;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -238,11 +240,24 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                                 int locationY = (int) location.top;
                                 int width = (int) location.width();
                                 int height = (int) location.height();
-
+                                LOGGER.i("LOCATIONX: " + locationX);
+                                LOGGER.i("LOCATIONY: " + locationY);
+                                LOGGER.i("width: " + width);
+                                LOGGER.i("height: " + height);
+                                LOGGER.i("croppedBitmap width: " + croppedBitmap.getWidth() + " height: " + croppedBitmap.getHeight());
+                                LOGGER.i("printing to: " + getFilesDir().getAbsolutePath());
+                                File f = new File(getFilesDir().getAbsolutePath() + "/detector_image.png");
+                                try (FileOutputStream out = new FileOutputStream(f)) {
+                                    croppedBitmap.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
+                                    // PNG is a lossless format, the compression factor (100) is ignored
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
                                 imageCroppedBitmap = Bitmap.createBitmap(croppedBitmap, locationX, locationY, width, height);
                                 List<Classifier.Recognition> classifierResults = classifier.recognizeImage(imageCroppedBitmap, sensorOrientation);
 
                                 result.setTitle(classifierResults.get(0).getTitle());
+                                result.setConfidence(classifierResults.get(0).getConfidence());
 
                                 cropToFrameTransform.mapRect(location);
 

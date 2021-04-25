@@ -56,7 +56,7 @@ public interface Detector {
         /**
          * A sortable score for how good the recognition is relative to others. Higher should be better.
          */
-        private final Float confidence;
+        private Float confidence;
 
         /**
          * Optional location within the source image for the location of the recognized object.
@@ -95,6 +95,10 @@ public interface Detector {
 
         public Float getConfidence() {
             return confidence;
+        }
+
+        public void setConfidence(Float f) {
+            this.confidence = f;
         }
 
         public RectF getLocation() {
