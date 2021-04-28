@@ -211,7 +211,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                         final long startTime = SystemClock.uptimeMillis();
                         final List<Detector.Recognition> results = detector.recognizeImage(croppedBitmap);
                         lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
-
+                        LOGGER.d("Yolo Detection time" +lastProcessingTimeMs);
                         Log.e("CHECK", "run: " + results.size());
 
                         cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
@@ -234,7 +234,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                         for (final Detector.Recognition result : results) {
                             final RectF location = result.getLocation();
                             if (location != null && result.getConfidence() >= minimumConfidence) {
-                                canvas.drawRect(location, paint);
+
 
                                 int locationX = (int) location.left;
                                 int locationY = (int) location.top;
@@ -245,24 +245,25 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                                 LOGGER.i("width: " + width);
                                 LOGGER.i("height: " + height);
                                 LOGGER.i("croppedBitmap width: " + croppedBitmap.getWidth() + " height: " + croppedBitmap.getHeight());
-                                LOGGER.i("printing to: " + getFilesDir().getAbsolutePath());
-                                File f = new File(getFilesDir().getAbsolutePath() + "/detector_image.png");
-                                try (FileOutputStream out = new FileOutputStream(f)) {
-                                    croppedBitmap.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
-                                    // PNG is a lossless format, the compression factor (100) is ignored
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
+                                final long startTimeClassification = SystemClock.uptimeMillis();
                                 imageCroppedBitmap = Bitmap.createBitmap(croppedBitmap, locationX, locationY, width, height);
+                                // ImageUtils.saveBitmap(imageCroppedBitmap); // this will save the image sent to the classification model (can also specify a file-location parameter)
+                                // sensorOrientation may need modification/already applied...
                                 List<Classifier.Recognition> classifierResults = classifier.recognizeImage(imageCroppedBitmap, sensorOrientation);
-
+                                final long classificationTotalTime = SystemClock.uptimeMillis() - startTimeClassification;
+                                LOGGER.d("classification time: " + classificationTotalTime);
+                                // Takes the first classification result + confidence.
                                 result.setTitle(classifierResults.get(0).getTitle());
                                 result.setConfidence(classifierResults.get(0).getConfidence());
+                                // 0 for testing
+                                Float threshold = 0.0f;
 
-                                cropToFrameTransform.mapRect(location);
-
-                                result.setLocation(location);
-                                mappedRecognitions.add(result);
+                                if (classifierResults.get(0).getConfidence() > threshold) {
+                                    cropToFrameTransform.mapRect(location);
+                                    result.setLocation(location);
+                                    canvas.drawRect(location, paint);
+                                    mappedRecognitions.add(result);
+                                }
                             }
                         }
 

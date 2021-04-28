@@ -1,0 +1,14 @@
+Speed Limit 10
+Speed Limit 15
+Speed Limit 20
+Speed Limit 25
+Speed Limit 30
+Speed Limit 35
+Speed Limit 45
+Diagonal Arrow
+Chevron Left
+Chevron Right
+Double Arrow
+Single Arrow Left
+Single Arrow Right
+Rectangle Other
